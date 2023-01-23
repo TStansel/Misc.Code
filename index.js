@@ -14,10 +14,15 @@ const booksAPIKey = process.env.booksAPIKey;
 const githubAPIToken = process.env.githubAPIToken;
 const gistID = process.env.gistID;
 export const handler = (event) => __awaiter(void 0, void 0, void 0, function* () {
-    // Add verification for title and notes
     let eventAny = event;
     let title = eventAny.title;
     let notes = eventAny.notes;
+    if (title == "") {
+        return buildResponse(400, "Title can not be empty.");
+    }
+    if (notes.toLowerCase() === "no" || notes.toLowerCase() === "nope") {
+        notes = "";
+    }
     let completeURL = booksURL + "q=" + title + "&key=" + booksAPIKey;
     const book = yield getBookInformation(completeURL, notes);
     const updateResonse = yield updateGist(githubAPIToken, gistID, book);
@@ -57,13 +62,7 @@ function updateGist(githubAPIToken, gistID, book) {
         // There should be just a single file
         const filename = Object.keys(gist.data.files)[0];
         const fileContent = gist.data.files[filename].content;
-        const newContentLine = "\n| " +
-            book.title +
-            " | " +
-            book.author +
-            " | " +
-            book.notes +
-            " |";
+        const newContentLine = "\n| " + book.title + " | " + book.author + " | " + book.notes + " |";
         try {
             yield octokit.gists.update({
                 gist_id: gistID,
