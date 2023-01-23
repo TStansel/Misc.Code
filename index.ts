@@ -9,7 +9,6 @@ import { Octokit } from "@octokit/rest";
 type Book = {
   title: string;
   author: string;
-  publisher: string;
   notes: string;
 };
 
@@ -21,12 +20,13 @@ const gistID = process.env.gistID as string;
 export const handler = async (
   event: APIGatewayProxyEventV2
 ): Promise<APIGatewayProxyResultV2> => {
-  console.log(event);
-  let exampleTxt = "red rising";
-  let exampleNotes = "great one";
-  let completeURL = booksURL + "q=" + exampleTxt + "&key=" + booksAPIKey;
+    // Add verification for title and notes
+  let eventAny = event as any;
+  let title = eventAny.title;
+  let notes = eventAny.notes;
+  let completeURL = booksURL + "q=" + title + "&key=" + booksAPIKey;
 
-  const book = await getBookInformation(completeURL, exampleNotes);
+  const book = await getBookInformation(completeURL, notes);
 
   const updateResonse = await updateGist(githubAPIToken, gistID, book);
 
@@ -44,12 +44,10 @@ async function getBookInformation(url: string, notes: string): Promise<Book> {
   const bookData = booksResponse.data.items[0].volumeInfo;
   const title = bookData.title;
   const author = bookData.authors[0];
-  const publisher = bookData.publisher;
 
   return {
     title: title,
     author: author,
-    publisher: publisher,
     notes: notes,
   } as Book;
 }
@@ -78,8 +76,6 @@ async function updateGist(
     book.title +
     " | " +
     book.author +
-    " | " +
-    book.publisher +
     " | " +
     book.notes +
     " |";

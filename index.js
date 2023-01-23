@@ -14,11 +14,12 @@ const booksAPIKey = process.env.booksAPIKey;
 const githubAPIToken = process.env.githubAPIToken;
 const gistID = process.env.gistID;
 export const handler = (event) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log(event);
-    let exampleTxt = "red rising";
-    let exampleNotes = "great one";
-    let completeURL = booksURL + "q=" + exampleTxt + "&key=" + booksAPIKey;
-    const book = yield getBookInformation(completeURL, exampleNotes);
+    // Add verification for title and notes
+    let eventAny = event;
+    let title = eventAny.title;
+    let notes = eventAny.notes;
+    let completeURL = booksURL + "q=" + title + "&key=" + booksAPIKey;
+    const book = yield getBookInformation(completeURL, notes);
     const updateResonse = yield updateGist(githubAPIToken, gistID, book);
     return buildResponse(200, updateResonse);
 });
@@ -34,11 +35,9 @@ function getBookInformation(url, notes) {
         const bookData = booksResponse.data.items[0].volumeInfo;
         const title = bookData.title;
         const author = bookData.authors[0];
-        const publisher = bookData.publisher;
         return {
             title: title,
             author: author,
-            publisher: publisher,
             notes: notes,
         };
     });
@@ -62,8 +61,6 @@ function updateGist(githubAPIToken, gistID, book) {
             book.title +
             " | " +
             book.author +
-            " | " +
-            book.publisher +
             " | " +
             book.notes +
             " |";
