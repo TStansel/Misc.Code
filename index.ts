@@ -20,10 +20,18 @@ const gistID = process.env.gistID as string;
 export const handler = async (
   event: APIGatewayProxyEventV2
 ): Promise<APIGatewayProxyResultV2> => {
-    // Add verification for title and notes
   let eventAny = event as any;
-  let title = eventAny.title;
-  let notes = eventAny.notes;
+  let title: string = eventAny.title;
+  let notes: string = eventAny.notes;
+
+  if (title == "") {
+    return buildResponse(400, "Title can not be empty.");
+  }
+
+  if (notes.toLowerCase() === "no" || notes.toLowerCase() === "nope") {
+    notes = "";
+  }
+
   let completeURL = booksURL + "q=" + title + "&key=" + booksAPIKey;
 
   const book = await getBookInformation(completeURL, notes);
@@ -72,13 +80,7 @@ async function updateGist(
   const filename = Object.keys(gist.data.files)[0];
   const fileContent = gist.data.files[filename].content;
   const newContentLine =
-    "\n| " +
-    book.title +
-    " | " +
-    book.author +
-    " | " +
-    book.notes +
-    " |";
+    "\n| " + book.title + " | " + book.author + " | " + book.notes + " |";
 
   try {
     await octokit.gists.update({
